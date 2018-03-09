@@ -94,6 +94,9 @@ accept: ## Run acceptance tests
 detect_changed_source_translations: ## Check if translation files are up-to-date
 	cd course_discovery && i18n_tool changed
 
+test_translations: ## Check if translation files are valid
+	cd course_discovery && i18n_tool validate
+
 validate_translations: fake_translations detect_changed_source_translations ## Install fake translations and check if translation files are up-to-date
 
 docs:
