@@ -3139,16 +3139,13 @@ class CourseEditViewTests(SiteMixin, TestCase):
         paid_seat = Seat.objects.get(type=Seat.VERIFIED, price=150)
         audit_seat = Seat.objects.get(type=Seat.AUDIT, price=0)
 
-        def refresh_from_db():
-            entitlement.refresh_from_db()
-            paid_seat.refresh_from_db()
-            audit_seat.refresh_from_db()
-
         # Test price change
         course_data['price'] = 99
         response = self.client.post(self.edit_page_url, data=course_data)
         self.assertEqual(response.status_code, 302)
-        refresh_from_db()
+        entitlement.refresh_from_db()
+        paid_seat.refresh_from_db()
+        audit_seat.refresh_from_db()
         self.assertEqual(entitlement.price, 99)
         self.assertEqual(paid_seat.price, 99)
         self.assertEqual(audit_seat.price, 0)
@@ -3157,10 +3154,40 @@ class CourseEditViewTests(SiteMixin, TestCase):
         course_data['mode'] = CourseEntitlement.PROFESSIONAL
         response = self.client.post(self.edit_page_url, data=course_data)
         self.assertEqual(response.status_code, 302)
-        refresh_from_db()
+        entitlement.refresh_from_db()
+        paid_seat.refresh_from_db()
         self.assertEqual(entitlement.mode, CourseEntitlement.PROFESSIONAL)
         self.assertEqual(paid_seat.type, Seat.PROFESSIONAL)
-        self.assertEqual(audit_seat.type, Seat.AUDIT)
+
+    def test_entitlement_published_run_failure(self):
+        """
+        Verify that a course with a published course run cannot be saved
+        """
+        self.course.version = Course.ENTITLEMENT_VERSION
+        self.course.save()
+        factories.CourseEntitlementFactory(course=self.course, mode=CourseEntitlement.VERIFIED)
+        course_run = factories.CourseRunFactory.create(
+            course=self.course, lms_course_id='course-v1:edxTest+Test342+2016Q1', end=datetime.now() + timedelta(days=1)
+        )
+        factories.CourseUserRoleFactory(course=self.course, role=PublisherUserRole.Publisher)
+        factories.CourseUserRoleFactory(course=self.course, role=PublisherUserRole.ProjectCoordinator)
+        # Create a Verified and Audit seat
+        factories.SeatFactory.create(course_run=course_run, type=Seat.VERIFIED, price=100)
+        factories.SeatFactory(course_run=course_run, type=Seat.AUDIT, price=0)
+
+        post_data = self._post_data(self.organization_extension)
+        post_data['team_admin'] = self.course_team_role.user.id
+        post_data['mode'] = CourseEntitlement.PROFESSIONAL
+
+        response = self.client.post(self.edit_page_url, data=post_data)
+        self.assertRedirects(
+            response,
+            expected_url=reverse('publisher:publisher_course_detail', kwargs={'pk': self.course.id}),
+            status_code=302,
+            target_status_code=200
+        )
+
+        factories.CourseRunStateFactory(course_run=course_run, name=CourseRunStateChoices.Published)
 
     def test_course_with_published_course_run(self):
         """
