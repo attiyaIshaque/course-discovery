@@ -37,7 +37,8 @@ class CatalogQueryContainsViewSet(GenericAPIView):
             if course_uuids:
                 course_uuids = [UUID(course_uuid) for course_uuid in course_uuids.split(',')]
                 specified_course_ids += course_uuids
-                identified_course_ids.update(Course.search(query).filter(partner=partner, uuid__in=course_uuids).
+                course_qs = query.replace('org:', 'organizations:', 1)
+                identified_course_ids.update(Course.search(course_qs).filter(partner=partner, uuid__in=course_uuids).
                                              values_list('uuid', flat=True))
 
             contains = {str(identifier): identifier in identified_course_ids for identifier in specified_course_ids}

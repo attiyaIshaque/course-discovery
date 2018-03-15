@@ -56,7 +56,7 @@ class CatalogQueryViewSetTests(APITestCase):
     def test_contains_course_and_run(self):
         """ Verify that both the course and the run are contained in the broadest query. """
         qs = urllib.parse.urlencode({
-            'query': 'key:*',
+            'query': 'org:*',
             'course_run_ids': self.course_run.key,
             'course_uuids': self.course.uuid,
         })
