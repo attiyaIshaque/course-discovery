@@ -3014,13 +3014,12 @@ class CourseEditViewTests(SiteMixin, TestCase):
             target_status_code=200
         )
 
-        # Clear out the seats created above to test the mismatch cases
+        # Clear out the seats created above and reset the version to test the mismatch cases
         course_run.seats.all().delete()
-        verified_seat = factories.SeatFactory.create(course_run=course_run, type=Seat.VERIFIED, price=2)
-        factories.SeatFactory(course_run=course_run, type=Seat.AUDIT, price=0)  # Create a seat, do not need to access
-
         self.course.version = Course.SEAT_VERSION
         self.course.save()
+        verified_seat = factories.SeatFactory.create(course_run=course_run, type=Seat.VERIFIED, price=2)
+        factories.SeatFactory(course_run=course_run, type=Seat.AUDIT, price=0)  # Create a seat, do not need to access
 
         # Verify that we can switch between NOOP_MODES
         for noop_mode in [''] + CourseEntitlementForm.NOOP_MODES:
