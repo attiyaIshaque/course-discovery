@@ -3194,7 +3194,6 @@ class CourseEditViewTests(SiteMixin, TestCase):
         response = self.client.post(self.edit_page_url, data=post_data)
         self.assertEqual(response.status_code, 400)
 
-
     def test_course_with_published_course_run(self):
         """
         Verify that editing course with published course run does not changed state

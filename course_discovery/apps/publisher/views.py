@@ -482,8 +482,6 @@ class CourseEditView(mixins.PublisherPermissionMixin, UpdateView):
 
     @transaction.atomic
     def _update_seats_from_entitlement(self, course, entitlement):
-        print('entitlement')
-        print(entitlement)
         for run in self._get_active_course_runs(course):
             upgrade_deadline = None
             paid_seat = run.seats.exclude(
@@ -495,14 +493,14 @@ class CourseEditView(mixins.PublisherPermissionMixin, UpdateView):
             if entitlement.mode == CourseEntitlement.VERIFIED:
                 run.seats.create(
                     type=Seat.AUDIT,
-                    price = 0,
-                    currency = entitlement.currency
+                    price=0,
+                    currency=entitlement.currency
                 )
             run.seats.create(
                 type=CourseEntitlement.MODE_TO_SEAT_TYPE_MAPPING[entitlement.mode],
-                price = entitlement.price,
-                currency = entitlement.currency,
-                upgrade_deadline = upgrade_deadline
+                price=entitlement.price,
+                currency=entitlement.currency,
+                upgrade_deadline=upgrade_deadline
             )
 
     def _render_post_error(self, request, ctx_overrides=None, status=400):
