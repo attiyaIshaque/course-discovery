@@ -482,6 +482,8 @@ class CourseEditView(mixins.PublisherPermissionMixin, UpdateView):
 
     @transaction.atomic
     def _update_seats_from_entitlement(self, course, entitlement):
+        print('entitlement')
+        print(entitlement)
         for run in self._get_active_course_runs(course):
             upgrade_deadline = None
             paid_seat = run.seats.exclude(
@@ -596,6 +598,7 @@ class CourseEditView(mixins.PublisherPermissionMixin, UpdateView):
                 })
 
         version = Course.ENTITLEMENT_VERSION if entitlement_mode else Course.SEAT_VERSION
+        tmp_course = course_form.save(commit=False)
         self._update_course(course_form, entitlement_form, user, version)
 
     def post(self, request, *args, **kwargs):
